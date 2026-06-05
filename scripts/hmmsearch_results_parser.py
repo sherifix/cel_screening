@@ -38,7 +38,7 @@ for root, dirs, files in os.walk(hmmer_results):
             try:
                 # Parse hmmscan --domtblout
                 for qresult in SearchIO.parse(tbl_path, "hmmsearch3-domtab"):
-                    family = qresult.id
+                    family = qresult.id.replace("_trimmed", "")
 
                     for hit in qresult:
                         for hsp in hit:
@@ -50,7 +50,6 @@ for root, dirs, files in os.walk(hmmer_results):
                                 continue
 
                             rows.append({
-                                "proteome": proteome_name,
                                 "accession": accession,
                                 "family": family,
                                 "evalue": hsp.evalue,
@@ -76,4 +75,4 @@ if rows:
     df.to_csv(output_csv, index=False)
     print(f"Saved {len(df)} hits to {output_csv}")
 else:
-    print("No hits found.")
+    print("No hits found!")
