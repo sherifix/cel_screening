@@ -29,7 +29,17 @@ rule all:
         "data/raw/.hmmsearch_parsing_complete",
         "data/raw/.filtering_hmmsearch_complete",
         "data/raw/.thermostability_predicted",
-        "data/raw/.signalp_prediction"
+        "data/raw/.signalp_prediction",
+        "data/raw/.secreted_thermostable_results",
+        "output_files/genbank_uniprot_map.csv",
+        "data/raw/.usalign_complete",
+        "output_files/usalign_summary.csv",
+        "output_files/top_hits.csv",
+        "data/trimmed_structures/trimming_summary.csv",
+        "data/pdb_list.ds",
+        "data/trimmed_pdb_list.ds",
+        "data/raw/.p2rank_complete",
+        "output_files/docking_boxes.csv"
 
 
 rule download_cazy_data:
@@ -243,4 +253,119 @@ rule signalp_prediction:
     shell:
         """
         bash scripts/signalp.sh 2> {log}
+        """
+
+rule filtering_thermo_signal_results:
+    input:
+        "data/raw/.signalp_prediction"
+    output:
+        touch("data/raw/.secreted_thermostable_results")
+    log:
+        "logs/secreted_thermostable.log"
+    shell:
+        """
+        python scripts/filtering_thermo_signal_predictions.py 2> {log}
+        """
+
+rule prepare_structures:
+    input:
+        "output_files/hits_thermo_sp.csv"
+    output:
+        "output_files/genbank_uniprot_map.csv"
+    log:
+        "logs/prepare_structures.log"
+    shell:
+        """
+        python scripts/prepare_structures.py 2> {log}
+        """
+
+rule run_usalign:
+    input:
+        "output_files/genbank_uniprot_map.csv",
+        "data/reference_structures"
+    output:
+        touch("data/raw/.usalign_complete")
+    log:
+        "logs/usalign.log"
+    shell:
+        """
+        bash scripts/usaligner.sh 2> {log}
+        """
+
+rule parse_usalign:
+    input:
+        "data/raw/.usalign_complete"
+    output:
+        "output_files/usalign_summary.csv"
+    log:
+        "logs/parse_usalign.log"
+    shell:
+        """
+        python scripts/parse_usalign.py 2> {log}
+        """
+
+rule filter_top_hits:
+    input:
+        "output_files/usalign_summary.csv",
+        "output_files/hits_thermo_sp.csv"
+    output:
+        "output_files/top_hits.csv"
+    log:
+        "logs/filter_top_hits.log"
+    shell:
+        """
+        python scripts/filter_top_hits.py 2> {log}
+        """
+
+rule trim_structures:
+    input:
+        "data/query_structures"
+    output:
+        "data/trimmed_structures/trimming_summary.csv"
+    log:
+        "logs/trim_structures.log"
+    shell:
+        """
+        python scripts/trim_structures.py 2> {log}
+        """
+
+rule prepare_pdb_lists:
+    input:
+        "output_files/top_hits.csv",
+        "data/query_structures",
+        "data/trimmed_structures"
+    output:
+        "data/pdb_list.ds",
+        "data/trimmed_pdb_list.ds"
+    log:
+        "logs/prepare_pdb_lists.log"
+    shell:
+        """
+        python scripts/prepare_pdb_lists.py 2> {log}
+        """
+
+rule run_p2rank:
+    input:
+        "data/trimmed_pdb_list.ds"
+    output:
+        touch("data/raw/.p2rank_complete")
+    log:
+        "logs/p2rank.log"
+    shell:
+        """
+        python scripts/run_p2rank.py 2> {log}
+        """
+
+rule parse_p2rank_results:
+    input:
+        "data/trimmed_pdb_list.ds",
+        "data/trimmed_structures/trimming_summary.csv",
+        "data/raw/.p2rank_complete"
+    output:
+        "output_files/docking_boxes.csv"
+    log:
+        "logs/parse_p2rank.log"
+    shell:
+        """
+        python scripts/parse_p2rank_results.py 2> {log}
         """
