@@ -19,3 +19,4 @@ logs/
 # IDE
 .vscode/
 .idea/
+dbcan/

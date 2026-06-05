@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
-OUTPUT_FILE = "/home/ubuntu/storage/thesis/test/data/CAZy_all_GenBank_accessions.txt"
+OUTPUT_FILE = "data/blacklist_accessions.txt"
 TARGET_ECS = {"3.2.1.4", "3.2.1.21", "3.2.1.91", "3.2.1.176"}
 keywords=[
         "endoglucanase",
@@ -18,7 +18,7 @@ session = requests.Session()
 
 for i in range(0, 195):
     url = f"https://www.cazy.org/GH{i}_characterized.html"
-    print(f"[INFO] Accessing {url}")
+    print(f"==== Accessing GH_{i}")
 
     try:
         response = session.get(url, timeout=30)
@@ -34,7 +34,7 @@ for i in range(0, 195):
         None
     )
     if target_table is None:
-        print(f"[INFO] GH{i}: no characterized table found, skipping")
+        print(f"ATTENTION GH{i}: no characterized table found, skipping")
         continue
 
     for row in target_table.find_all("tr"):
@@ -44,20 +44,18 @@ for i in range(0, 195):
 
         protein_name = cells[0].get_text(strip = True).lower()
 
-        
+
         # EC number check
         ec_link = cells[1].find("a")
         if not ec_link:
             continue
         ec_number = ec_link.get_text(strip=True)
-        #if ec_number not in TARGET_ECS:
-        #    continue
 
         if ec_number not in TARGET_ECS and not any(word in protein_name for word in keywords):
             continue
-            
 
-        # --- GenBank accessions (anchors + plain text) ---
+
+        #GenBank accessions (anchors + plain text) ---
         genbank_cell = cells[4]
         for text in genbank_cell.stripped_strings:
             text = text.strip()
