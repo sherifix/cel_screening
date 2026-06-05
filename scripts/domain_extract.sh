@@ -1,23 +1,27 @@
 #!/bin/bash
-set -euo pipefail
 
 THREADS=8
-HMM_FILE="../../dbcan/dbCAN.hmm"  
-
-# parent directory containing family/subfamily folders
+HMM_FILE="$1"
 PARENT_DIR="data/GH_families"
+OUTPUT_DIR="data/extracted_domains"
 
-# output directory
-OUTPUT_DIR="$PWD/data/extracted_domains"
+mkdir -p "$OUTPUT_DIR"
 
-mkdir -p $OUTPUT_DIR
+if [[ ! -f "$HMM_FILE" ]]; then
+    echo "ERROR: HMM file not found: $HMM_FILE"
+    exit 1
+fi
 
-# Main Loop
-cd "$PARENT_DIR"
+for fasta in "$PARENT_DIR"/GH*.faa; do
+    if [[ ! -f "$fasta" ]]; then
+        echo "No GH*.faa files found in $PARENT_DIR"
+        exit 0
+    fi
 
-for fasta in GH*.faa ; do
-    family="${fasta%.faa}"
-    echo 'processing ${family}'
+    family=$(basename "$fasta" .faa)
+    echo "Processing $family"
 
-    hmmscan --domtblout $OUTPUT_DIR/${family}_dom.tbl --cpu $THREADS "$HMM_FILE" "$fasta"
+    hmmscan --domtblout "$OUTPUT_DIR/${family}_dom.tbl" --cpu "$THREADS" "$HMM_FILE" "$fasta"
 done
+
+echo "Domain extraction complete"
