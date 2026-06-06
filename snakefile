@@ -39,7 +39,10 @@ rule all:
         "data/pdb_list.ds",
         "data/trimmed_pdb_list.ds",
         "data/raw/.p2rank_complete",
-        "output_files/docking_boxes.csv"
+        "output_files/pockets_summary.tsv",
+        "data/raw/.ligand_prepared_complete",
+        "data/raw/.receptors_prepared_complete",
+        "data/raw/.docking_complete"
 
 
 rule download_cazy_data:
@@ -368,4 +371,41 @@ rule parse_p2rank_results:
     shell:
         """
         python scripts/parse_p2rank_results.py 2> {log}
+        """
+
+rule prepare_ligand:
+    input:
+        "results/autodock_vina"  # User places .sdf file here
+    output:
+        touch("data/raw/.ligand_prepared_complete")
+    log:
+        "logs/prepare_ligand.log"
+    shell:
+        """
+        python scripts/prepare_ligand.py 2> {log}
+        """
+
+rule prepare_receptors:
+    input:
+        "output_files/pockets_summary.tsv"
+    output:
+        touch("data/raw/.receptors_prepared_complete")
+    log:
+        "logs/prepare_receptors.log"
+    shell:
+        """
+        python scripts/prepare_receptors.py 2> {log}
+        """
+
+rule run_docking:
+    input:
+        "results/autodock_vina/receptors",
+        "results/autodock_vina/cellotetraose.pdbqt"
+    output:
+        touch("data/raw/.docking_complete")
+    log:
+        "logs/run_docking.log"
+    shell:
+        """
+        bash scripts/run_docking.sh 2> {log}
         """
