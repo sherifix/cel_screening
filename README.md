@@ -2,35 +2,16 @@
 
 Pipeline for screening thermostable cellulases from GH family sequences.
 
-## Required external data
+## Table of Contents
 
-### dbCAN HMM database
+1. [Environment Setup](#environment-setup)
+2. [Required External Data](#required-external-data)
+3. [Input Data Preparation](#input-data-preparation)
+4. [Ligand Preparation](#ligand-preparation)
+5. [Running the Pipeline](#running-the-pipeline)
+6. [Output Files](#output-files)
 
-Download dbCAN HMM file from:
-https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN-HMMdb-V11.txt
-
-Place it in `dbcan/dbCAN.hmm`:
-
-```bash
-mkdir -p dbcan
-wget -O dbcan/dbCAN.hmm https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN-HMMdb-V11.txt
-hmmpress dbcan/dbCAN.hmm
-
-
-## Ligand Preparation
-
-Before running the pipeline, place your ligand SDF file in:
-
-results/autodock_vina/
-
-
-
-The pipeline will automatically convert it to PDBQT format using Meeko.
-
-Example:
-- For cellotetraose, download the SDF file from PubChem or PDB
-- Save it as `results/autodock_vina/cellotetraose.sdf`
-
+---
 
 ## Environment Setup
 
@@ -51,3 +32,43 @@ conda env create -f environments/thermoprot.yml
 
 # EpHod (optional)
 conda env create -f environments/ephod.yml
+
+---
+
+
+conda activate thesis
+
+---
+
+mkdir -p dbcan
+wget -O dbcan/dbCAN.hmm https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN-HMMdb-V11.txt
+cd dbcan
+hmmpress dbCAN.hmm
+cd ..
+
+---
+
+GH5_5
+GH6
+GH7
+GH9
+GH12
+
+---
+
+
+conda activate thesis
+snakemake --cores 8
+
+
+---
+
+
+
+## Then verify it worked
+
+```bash
+head -20 README.md
+
+
+---
