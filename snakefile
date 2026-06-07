@@ -42,7 +42,8 @@ rule all:
         "output_files/pockets_summary.tsv",
         "data/raw/.ligand_prepared_complete",
         "data/raw/.receptors_prepared_complete",
-        "data/raw/.docking_complete"
+        "data/raw/.docking_complete",
+        "output_files/vina_summary.csv"
 
 
 rule download_cazy_data:
@@ -394,7 +395,7 @@ rule prepare_receptors:
         "logs/prepare_receptors.log"
     shell:
         """
-        python scripts/prepare_receptors.py 2> {log}
+        bash scripts/prepare_receptors.sh 2> {log}
         """
 
 rule run_docking:
@@ -408,4 +409,16 @@ rule run_docking:
     shell:
         """
         bash scripts/run_docking.sh 2> {log}
+        """
+
+rule parse_vina_results:
+    input:
+        "data/raw/.docking_complete"
+    output:
+        "output_files/vina_summary.csv"
+    log:
+        "logs/parse_vina.log"
+    shell:
+        """
+        python scripts/parse_vina_results.py 2> {log}
         """
