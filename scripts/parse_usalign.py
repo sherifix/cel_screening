@@ -13,19 +13,30 @@ rows = []
 for txt in glob.glob(os.path.join(BASE_DIR, "results/usalign_results/*.txt")):
     filename = os.path.basename(txt)
 
-    # Parse filename: accession_vs_reference.txt
+    # Parse filename: family_accession_vs_reference.txt
     name = filename.replace(".txt", "")
 
     if "_vs_" not in name:
         continue
 
-    candidate, reference = name.split("_vs_")
+    # Split: family_accession vs reference
+    first_part, reference = name.split("_vs_")
+
+    # Extract family and candidate from first_part
+    # Family can have underscores (e.g., GH5_5), so split from the end
+    parts = first_part.split("_")
+    
+    # The candidate is the last part (accession like AAA23226.1)
+    candidate = parts[-1]
+    
+    # The family is everything before the candidate, joined with underscores
+    family = "_".join(parts[:-1])
 
     tm1 = tm2 = rmsd = aln_len = seqid = coverage_cand = coverage_ref = None
 
     with open(txt) as f:
         for line in f:
-            # Aligned length, RMSD, Seq_ID (ALL IN ONE LINE)
+            # Aligned length, RMSD, Seq_ID
             m = re.search(
                 r"Aligned length=\s*(\d+),\s*RMSD=\s*([\d\.]+),\s*Seq_ID=.*=\s*([\d\.]+)",
                 line
@@ -50,6 +61,7 @@ for txt in glob.glob(os.path.join(BASE_DIR, "results/usalign_results/*.txt")):
                     coverage_ref = aln_len / int(m2.group(2)) * 100
 
     rows.append({
+        "family": family,
         "candidate": candidate,
         "reference": reference,
         "TM_score_candidate": tm1,
@@ -64,28 +76,18 @@ for txt in glob.glob(os.path.join(BASE_DIR, "results/usalign_results/*.txt")):
 
 if rows:
     df = pd.DataFrame(rows)
-
-    # Add family information from hits_thermo_sp.csv
-    hits_file = os.path.join(BASE_DIR, "output_files/hits_thermo_sp.csv")
-    if os.path.exists(hits_file):
-        df_hits = pd.read_csv(hits_file)
-        acc_to_family = dict(zip(df_hits['accession'], df_hits['family']))
-        df['family'] = df['candidate'].map(acc_to_family)
-
     output_file = os.path.join(BASE_DIR, "output_files/usalign_summary.csv")
     df.to_csv(output_file, index=False)
     print(f"[DONE] Parsed {len(df)} alignments → {output_file}")
 
     # Print summary
-    print(f"\n ======== Summary:")
+    print(f"\n======== Summary:")
     print(f"  Total alignments: {len(df)}")
     print(f"  Unique candidates: {df['candidate'].nunique()}")
-    if 'family' in df.columns:
-        print(f"\n  By family:")
-        print(df.groupby('family').size())
+    print(f"\n  By family:")
+    print(df.groupby('family').size())
 else:
     print("No alignment files found in results/usalign_results/")
-    # Create empty file to avoid snakemake errors
-    output_file = os.path.join(BASE_DIR, "results/usalign_summary.csv")
-    pd.DataFrame(columns=["candidate", "reference", "TM_score_candidate", "TM_score_ref", "RMSD"]).to_csv(output_file, index=False)
+    output_file = os.path.join(BASE_DIR, "output_files/usalign_summary.csv")
+    pd.DataFrame(columns=["family", "candidate", "reference", "TM_score_candidate", "TM_score_ref", "RMSD"]).to_csv(output_file, index=False)
     print(f"Created empty file: {output_file}")

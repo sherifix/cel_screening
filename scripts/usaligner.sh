@@ -39,7 +39,7 @@ tail -n +2 "$HITS_CSV" | while IFS=',' read -r accession family rest; do
         [ -f "$ref" ] || continue
         ref_base=$(basename "$ref" .pdb)
         
-        out_prefix="$OUTPUT_DIR/${accession}_vs_${ref_base}"
+        out_prefix="$OUTPUT_DIR/${family}_${accession}_vs_${ref_base}"
         out_txt="${out_prefix}.txt"
         
         if [ -f "$out_txt" ]; then

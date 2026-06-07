@@ -39,6 +39,10 @@ columns_to_drop = ['txt_file', 'reference', 'candidate', 'TM_score_candidate', '
 merged = merged.drop(columns=[c for c in columns_to_drop if c in merged.columns])
 
 df_filtered = merged
+
+#delete under me 
+
+print(df_filtered)
 '''
 # Apply filters: TM-score >= 0.75, RMSD <= 2.06
 df_filtered = merged[
