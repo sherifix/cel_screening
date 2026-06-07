@@ -19,7 +19,7 @@ dependencies:
   - trimal=1.5.1
   - unzip=6.0
   - beautifulsoup4=4.13.4
-  - usalign=20241201
+  - usalign
   - wget=1.25.0
   - pip
   - pip:

@@ -6,6 +6,7 @@ channels:
 dependencies:
   - autogrid=4.2.9
   - boost-cpp=1.84.0
+  - numpy=1.26.4
   - gemmi=0.7.4
   - libboost=1.84.0
   - meeko=0.7.1

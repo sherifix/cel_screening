@@ -22,3 +22,8 @@ output_files/
 .idea/
 dbcan/
 .snakemake/
+
+# Docking results (keep directory but ignore contents)
+results/autodock_vina/*.pdbqt
+results/autodock_vina/*.sdf
+!results/autodock_vina/.gitkeep

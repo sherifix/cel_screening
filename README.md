@@ -3,7 +3,7 @@
 
 **Pipeline for screening thermostable cellulases from GH family sequences**.
 
-This pipeline was developed as a part of master thesis
+This pipeline was developed as a part of master thesis.
 
 ## Overview
 
@@ -16,8 +16,10 @@ potential thermostable cellulases through:
 - Structure prediction and analysis (AlphaFold DB, US-align)
 - Pocket prediction (P2Rank)
 - Molecular docking (AutoDock VINA)
+- Predict optimum pH (EpHod)
 
-The Carbohydrate Active enZYmes (CAZy) database served as a source of the sequences
+
+The Carbohydrate Active enZYmes (CAZy) database serves as a source of the sequences
 used for construction of HMMER profiles.
 
 
@@ -49,11 +51,9 @@ cd environments
 conda env create -f thesis.yml
 conda env create -f vina.yml
 cd ..
-```
 
-install AutoDock Vina
+# install AutoDock Vina
 
-```bash
 conda activate vina
 pip install vina
 conda deactivate 
@@ -196,6 +196,6 @@ Results will be saved in:
 - Candide residue length (default: < 800)
 
  Edit ==scripts/run_docking.sh== to change: 
-- ==EXHAUST=32== (exhaustiveness)
+- <mark>EXHAUST=32</mark> (exhaustiveness)
 
 
