@@ -109,7 +109,9 @@ specified by the user. A GH_families.txt file shall be created with the desired 
 <mark>Example of the GH_families.txt</mark>
 
 GH5_1
+
 GH7
+
 GH9
 
 ```bash 
@@ -139,7 +141,8 @@ Reference structures are ideally resolved PDB structures.
 They should be located inside subdirectories of their GH_family
 in data/reference_structures in .pdb format
 
-==Example==:
+<mark>Example</mark>:
+
 data/reference_structures/GH7/1CEL.pdb
 
 ```bash
@@ -179,15 +182,15 @@ snakemake --cores 8
 ## Output
 
 Results will be saved in:
-- ==output_files/== - CSV and TSV summaries
-- ==results/== - This directory contain initial output file from all programs
-- ==results/Autodock_vina/== - Here you can find receptor for docking and docking results those files can be used for visualization
+- <mark>output_files/</mark> - CSV and TSV summaries
+- <mark>results/</mark> - This directory contain initial output file from all programs
+- <mark>results/Autodock_vina/</mark> - Here you can find receptor for docking and docking results those files can be used for visualization
 
 
 ## Customization
 
 ### Modifying fitlters 
- Edit ==scripts/filter_top_hits.py== to change"
+ Edit <mark>scripts/filter_top_hits.py</mark> to change"
 - TM-score threshold (default: 0.75)
 - RMSD threshold (default: 2.06) 
 - Candide residue length (default: < 800)
