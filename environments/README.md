@@ -1,19 +1,24 @@
-# Environment Package Lists
+# Environment Files
 
-These files document the exact package versions used in this pipeline.
+## Required environments
 
-| Environment | File | Purpose |
-|-------------|------|---------|
-| thesis | thesis.txt | Main environment (HMMER, CD-HIT, MAFFT, etc.) |
-| signalp6 | signalp6.txt | SignalP 6.0 for secretion prediction |
-| thermoprot | thermoprot.txt | Thermostability prediction |
-| vina | vina.txt | Molecular docking |
-| EpHod | ephod.txt | Additional tool |
+| Environment | File | Installation |
+|-------------|------|--------------|
+| Main pipeline | `thesis.yml` | `conda env create -f thesis.yml` |
+| Docking | `vina.yml` | `conda env create -f vina.yml` |
 
-## Recreating
+## External tools (install separately)
 
-To recreate an environment:
+| Tool | Installation |
+|------|--------------|
+| SignalP6 | https://github.com/fmfi-compbio/signalp6 |
+| ThermoProt | `pip install thermoprot` |
+| EpHod | Custom installation (see documentation) |
+| P2Rank | https://github.com/rdk/p2rank |
 
-conda create -n thesis --file environments/thesis.txt
+## Create environments
 
-Note: Due to conda dependency resolution, manual installation may be needed.
+```bash
+conda env create -f thesis.yml
+conda env create -f vina.yml
+conda activate thesis
