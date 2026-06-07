@@ -1,74 +1,196 @@
-# Cel_Screening
 
-Pipeline for screening thermostable cellulases from GH family sequences.
+# Cel_screening
 
-## Table of Contents
+**Pipeline for screening thermostable cellulases from GH family sequences**
+This pipeline was developed as a part of master thesis
 
-1. [Environment Setup](#environment-setup)
-2. [Required External Data](#required-external-data)
-3. [Input Data Preparation](#input-data-preparation)
-4. [Ligand Preparation](#ligand-preparation)
-5. [Running the Pipeline](#running-the-pipeline)
-6. [Output Files](#output-files)
+## Overview
 
----
+This Snakemake pipeline processes GH family protein sequences to identify 
+potential thermostable cellulases through:
 
-## Environment Setup
+- HMM profiling and domain annotation
+- Thermostability prediction (ThermoProt)
+- Signal peptide prediction (SignalP6)
+- Structure prediction and analysis (AlphaFold, US-align)
+- Pocket prediction (P2Rank)
+- Molecular docking (AutoDock VINA)
 
-### Create all required environments
+The Carbohydrate Active enZYmes (CAZy) database served as a source of the sequences
+used for construction of HMMER profiles.
+
+
+## System requirements 
+
+- Linux OS (tested on Ubuntu)
+- Minimum 16 GB RAM
+- 30 GB free disk space
+- Conda (Miniconda or Anaconda)
+- Git
+- Internet connection
+- Available GUI for visualizations
+
+
+## Installation
+
+### 1. Clone the repository
 
 ```bash
-# Main pipeline
-conda env create -f environments/thesis.yml
+cd 
+git clone https://github.com/sherifix/cel_screening.git
+cd cel_screening
+```
 
-# Docking
-conda env create -f environments/vina.yml
+### 2. Create conda environments 
 
-# SignalP6
-conda env create -f environments/signalp6.yml
-
-# ThermoProt
-conda env create -f environments/thermoprot.yml
-
-# EpHod (optional)
-conda env create -f environments/ephod.yml
-
----
-
-
-conda activate thesis
-
----
-
-mkdir -p dbcan
-wget -O dbcan/dbCAN.hmm https://bcb.unl.edu/dbCAN2/download/Databases/dbCAN-HMMdb-V11.txt
-cd dbcan
-hmmpress dbCAN.hmm
+```bash
+cd environments
+conda env create -f thesis.yml
+conda env create -f vina.yml
 cd ..
+```
 
----
+install AutoDock Vina
 
-GH5_5
-GH6
+```bash
+conda activate vina
+pip install vina
+conda deactivate 
+```
+
+### 3. Install external tools separately
+
+These tools should be installed manually. The pipeline expects them at the locations below 
+with the exact environment names.
+
+| Tool | Installation |  Expected location  | Environment name |
+|------|--------------|---------------------|------------------|
+| SignalP6 | https://github.com/fteufel/signalp-6.0 | ~/tools/signalp/ | signalp6
+| ThermoProt | https://github.com/jafetgado/ThermoProt | ~/tools/ThermoProt | thermoprot
+| EpHod | https://github.com/beckham-lab/EpHod | ~/tools/EpHod | ephod
+| P2Rank | https://github.com/rdk/p2rank | ~/tools/p2rank_2.5.1 | p2rank
+
+Please note that: 
+- For SignalP6, the slow-sequential models were used. If you use another model, 
+change the --mode parameter in scripts/signalp.sh
+- All scripts use conda activate <env_name> - environments must have exactly these names
+- Adjust paths in scripts if you install tools to different locations
+
+
+## Usage
+
+### Input preparation
+**Required inputs**
+
+1. Proteomes to be screened by the pipeline 
+
+format should be .faa or .fasta 
+the proteomes directory should be located in data/proteomes
+
+```bash
+cd ~/cel_screening
+mkdir -p data/proteomes/
+cd data/proteomes/
+
+# keep all proteomic data here
+
+cd ~/cel_screening
+```
+
+2. GH families
+
+The HMMER profiles will be constructed from specific GH families. Those families should be
+specified by the user. A GH_families.txt file shall be created with the desired GH families 
+(one family per line). Subfamily level can be used. The GH_families.txt should be located
+ inside data/ directory. 
+
+==Example of the GH_families.txt==
+
+GH5_1
 GH7
 GH9
-GH12
 
----
+```bash 
+cd ~/cel_screening/data
+touch GH_families.txt
 
+#add families or sub families using nano / vim or echo
+```
 
-conda activate thesis
-snakemake --cores 8
+3. dbCAN HMM database (for catalytic domain annotation)
 
-
----
-
-
-
-## Then verify it worked
+it should be located in dbcan/
 
 ```bash
-head -20 README.md
+conda activate thesis
+cd ~/cel_screening
+mkdir dbcan
+wget -O dbcan/dbCAN.hmm https://pro.unl.edu/dbCAN2/download/run_dbCAN_database_
+total/dbCAN.hmm
+hmmpress dbCAN.hmm
+cd ..
+```
+
+4. Reference structures for 3D structure alignment
+
+Reference structures are ideally resolved PDB structures.
+They should be located inside subdirectories of their GH_family
+in data/reference_structures in .pdb format
+
+==Example==:
+data/reference_structures/GH7/1CEL.pdb
+
+```bash
+mkdir data/reference_structures/
+# create subdirectories based on your GH families
+```
+
+5. ligand file for docking
+
+In this pipeline, a universal ligand is docked against all potential candidates. In case of more ligands 
+or specific ligand for a candidate, the docking script scripts/run_docking.sh should be updated. 
+
+In case of one ligand, protonated ligand file in .sdf format should be located in results/Autodock_vina
+
+```bash
+cd ~/cel_screening
+mkdir -p results/Autodock_vina
+
+# place protonated ligand.sdf here
+
+cd ../../
+```
 
 
----
+## Running the pipeline
+
+```bash
+conda activate thesis
+
+# first dry run 
+snakemake --cores 8 --dry-run
+
+#full run 
+snakemake --cores 8
+```
+
+## Output
+
+Results will be saved in:
+- ==output_files/== - CSV and TSV summaries
+- ==results/== - This directory contain initial output file from all programs
+- ==results/Autodock_vina/== - Here you can find receptor for docking and docking results those files can be used for visualization
+
+
+## Customization
+
+### Modifying fitlters 
+ Edit ==scripts/filter_top_hits.py== to change"
+- TM-score threshold (default: 0.75)
+- RMSD threshold (default: 2.06) 
+- Candide residue length (default: < 800)
+
+ Edit ==scripts/run_docking.sh== to change: 
+- ==EXHAUST=32== (exhaustiveness)
+
+
