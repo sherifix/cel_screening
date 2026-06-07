@@ -11,9 +11,9 @@
 
 | Tool | Installation |
 |------|--------------|
-| SignalP6 | https://github.com/fmfi-compbio/signalp6 |
-| ThermoProt | `pip install thermoprot` |
-| EpHod | Custom installation (see documentation) |
+| SignalP6 | https://github.com/fteufel/signalp-6.0 |
+| ThermoProt | https://github.com/jafetgado/ThermoProt |
+| EpHod | https://github.com/beckham-lab/EpHod |
 | P2Rank | https://github.com/rdk/p2rank |
 
 ## Create environments
