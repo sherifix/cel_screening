@@ -40,10 +40,9 @@ merged = merged.drop(columns=[c for c in columns_to_drop if c in merged.columns]
 
 df_filtered = merged
 
-#delete under me 
 
-print(df_filtered)
-'''
+
+## Introduced Cutoffs+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Apply filters: TM-score >= 0.75, RMSD <= 2.06
 df_filtered = merged[
     (merged['TM_score_ref'] >= 0.75) & 
@@ -54,7 +53,7 @@ df_filtered = merged[
 if 'total_aa' in df_filtered.columns:
     df_filtered = df_filtered[df_filtered['total_aa'] <= 800]
     print(f"After length filter (<=800 aa): {len(df_filtered)}")
-'''
+
 # Sort and deduplicate
 df_top_hits = (
     df_filtered.sort_values(by="TM_score_ref", ascending=False)

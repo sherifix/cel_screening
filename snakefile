@@ -23,36 +23,14 @@ VALID_FAMILIES = get_valid_families()
 
 rule all:
     input:
-        expand("data/trimmed/{family}_trimmed.faa", family=VALID_FAMILIES),
-        "data/raw/.hmm_profiles_built_complete",
-        "data/raw/.hmmsearch_complete",
-        "data/raw/.hmmsearch_parsing_complete",
-        "data/raw/.filtering_hmmsearch_complete",
-        "data/raw/.thermostability_predicted",
-        "data/raw/.signalp_prediction",
-        "data/raw/.secreted_thermostable_results",
-        "output_files/genbank_uniprot_map.csv",
-        "data/raw/.usalign_complete",
-        "output_files/usalign_summary.csv",
-        "output_files/top_hits.csv",
-        "data/trimmed_structures/trimming_summary.csv",
-        "data/pdb_list.ds",
-        "data/trimmed_pdb_list.ds",
-        "data/raw/.p2rank_complete",
-        "output_files/pockets_summary.tsv",
-        "data/raw/.ligand_prepared_complete",
-        "data/raw/.receptors_prepared_complete",
-        "data/raw/.docking_complete",
-        "output_files/vina_summary.csv",
-        "data/fasta_files/docked_hits.faa",
+        "data/raw/.structures_prepared",
         "output_files/opt_ph_prediction.csv"
-
 
 rule download_cazy_data:
     input:
         "data/GH_families.txt"
     output:
-        touch("data/raw/.cazy_download_complete")
+        expand("data/raw/{family}.csv", family=VALID_FAMILIES)
     log:
         "logs/download_cazy_data.log"
     shell:
@@ -63,9 +41,9 @@ rule download_cazy_data:
 
 rule prepare_accessions:
     input:
-        "data/raw/.cazy_download_complete"
+        expand("data/raw/{family}.csv", family=VALID_FAMILIES)
     output:
-        touch("data/raw/.accs_prepared_complete")
+        expand("data/raw/{family}.txt", family=VALID_FAMILIES)
     log:
         "logs/prepare_accessions.log"
     shell:
@@ -75,9 +53,9 @@ rule prepare_accessions:
 
 rule fetch_sequences:
     input:
-        "data/raw/.accs_prepared_complete"
+        expand("data/raw/{family}.txt", family=VALID_FAMILIES)
     output:
-        touch("data/raw/.sequences_fetched_complete")
+        expand("data/GH_families/{family}.faa", family=VALID_FAMILIES)
     log:
         "logs/fetch_sequences.log"
     shell:
@@ -87,10 +65,10 @@ rule fetch_sequences:
 
 rule extract_domains:
     input:
-        "data/raw/.sequences_fetched_complete",
+        expand("data/GH_families/{family}.faa", family=VALID_FAMILIES),
         "dbcan/dbCAN.hmm"
     output:
-        touch("data/raw/.domains_extracted_complete")
+        expand("data/extracted_domains/{family}_dom.tbl", family=VALID_FAMILIES)
     log:
         "logs/domain_extract.log"
     shell:
@@ -100,9 +78,9 @@ rule extract_domains:
 
 rule extract_domains_only:
     input:
-        "data/raw/.domains_extracted_complete"
+        expand("data/extracted_domains/{family}_dom.tbl", family=VALID_FAMILIES)
     output:
-        touch("data/raw/.domains_extracted_complete_v2")
+        expand("data/domains/{family}_domains.faa", family=VALID_FAMILIES)
     log:
         "logs/extract_domains_only.log"
     shell:
@@ -182,7 +160,7 @@ rule build_hmm_profiles:
     input:
         expand("data/trimmed/{family}_trimmed.faa", family=VALID_FAMILIES)
     output:
-        touch("data/raw/.hmm_profiles_built_complete")
+        expand("data/hmmer_profiles/{family}.hmm", family=VALID_FAMILIES)
     log:
         "logs/hmmbuild.log"
     shell:
@@ -192,9 +170,9 @@ rule build_hmm_profiles:
 
 rule hmmsearch_proteomes:
     input:
-        "data/raw/.hmm_profiles_built_complete"  
+        expand("data/hmmer_profiles/{family}.hmm", family=VALID_FAMILIES)
     output:
-        touch("data/raw/.hmmsearch_complete")
+        directory("results/hmmsearch_results")
     log:
         "logs/hmmsearch.log"
     shell:
@@ -214,10 +192,10 @@ rule download_blacklist:
 
 rule hmmsearch_parsing:
     input:
-        "data/raw/.hmmsearch_complete",
+        "results/hmmsearch_results",
         "data/blacklist_accessions.txt"
     output:
-        touch("data/raw/.hmmsearch_parsing_complete")
+        "results/raw_results_hmmsearch.csv"
     log:
         "logs/hmmsearch_parse.log"
     shell:
@@ -227,9 +205,9 @@ rule hmmsearch_parsing:
 
 rule filter_overlapping_domains:
     input:
-        "data/raw/.hmmsearch_parsing_complete"
+        "results/raw_results_hmmsearch.csv"
     output:
-        touch("data/raw/.filtering_hmmsearch_complete")
+        "output_files/filtered_hmmsearch_results.csv"
     log:
         "logs/filter_hmmsearch_results.log"
     shell:
@@ -239,9 +217,9 @@ rule filter_overlapping_domains:
 
 rule thermoprot_prediction:
     input:
-        "data/raw/.filtering_hmmsearch_complete"
+        "output_files/filtered_hmmsearch_results.csv"
     output:
-        touch("data/raw/.thermostability_predicted")
+        "output_files/thermoprot_prediction.csv"
     log:
         "logs/thermoprot_prediction.log"
     shell:
@@ -251,9 +229,9 @@ rule thermoprot_prediction:
 
 rule signalp_prediction:
     input:
-        "data/raw/.thermostability_predicted"
+        "output_files/thermoprot_prediction.csv"
     output:
-        touch("data/raw/.signalp_prediction")
+        directory("results/signalp")
     log:
         "logs/signalp_prediction.log"
     shell:
@@ -263,9 +241,10 @@ rule signalp_prediction:
 
 rule filtering_thermo_signal_results:
     input:
-        "data/raw/.signalp_prediction"
+        "output_files/thermoprot_prediction.csv",
+        "results/signalp"
     output:
-        touch("data/raw/.secreted_thermostable_results")
+        "output_files/hits_thermo_sp.csv"
     log:
         "logs/secreted_thermostable.log"
     shell:
@@ -277,7 +256,8 @@ rule prepare_structures:
     input:
         "output_files/hits_thermo_sp.csv"
     output:
-        "output_files/genbank_uniprot_map.csv"
+        "output_files/genbank_uniprot_map.csv",
+        touch("data/raw/.structures_prepared")
     log:
         "logs/prepare_structures.log"
     shell:
@@ -288,9 +268,9 @@ rule prepare_structures:
 rule run_usalign:
     input:
         "output_files/genbank_uniprot_map.csv",
-        "data/reference_structures"
+        "data/raw/.structures_prepared"
     output:
-        touch("data/raw/.usalign_complete")
+        directory("results/usalign_results")
     log:
         "logs/usalign.log"
     shell:
@@ -300,7 +280,7 @@ rule run_usalign:
 
 rule parse_usalign:
     input:
-        "data/raw/.usalign_complete"
+        "results/usalign_results"
     output:
         "output_files/usalign_summary.csv"
     log:
@@ -325,9 +305,10 @@ rule filter_top_hits:
 
 rule trim_structures:
     input:
-        "data/query_structures"
+        "data/raw/.structures_prepared"
     output:
-        "data/trimmed_structures/trimming_summary.csv"
+        "data/trimmed_structures/trimming_summary.csv",
+        directory("data/trimmed_structures")
     log:
         "logs/trim_structures.log"
     shell:
@@ -338,7 +319,7 @@ rule trim_structures:
 rule prepare_pdb_lists:
     input:
         "output_files/top_hits.csv",
-        "data/query_structures",
+        "data/raw/.structures_prepared",
         "data/trimmed_structures"
     output:
         "data/pdb_list.ds",
@@ -354,7 +335,7 @@ rule run_p2rank:
     input:
         "data/trimmed_pdb_list.ds"
     output:
-        touch("data/raw/.p2rank_complete")
+        directory("results/p2rank_predictions")
     log:
         "logs/p2rank.log"
     shell:
@@ -366,9 +347,9 @@ rule parse_p2rank_results:
     input:
         "data/trimmed_pdb_list.ds",
         "data/trimmed_structures/trimming_summary.csv",
-        "data/raw/.p2rank_complete"
+        "results/p2rank_predictions"
     output:
-        "output_files/docking_boxes.csv"
+        "output_files/pockets_summary.tsv"
     log:
         "logs/parse_p2rank.log"
     shell:
@@ -378,9 +359,9 @@ rule parse_p2rank_results:
 
 rule prepare_ligand:
     input:
-        "results/autodock_vina"  # User places .sdf file here
+        "results/autodock_vina"  
     output:
-        touch("data/raw/.ligand_prepared_complete")
+        "results/autodock_vina/cellotetraose.pdbqt"
     log:
         "logs/prepare_ligand.log"
     shell:
@@ -392,7 +373,7 @@ rule prepare_receptors:
     input:
         "output_files/pockets_summary.tsv"
     output:
-        touch("data/raw/.receptors_prepared_complete")
+        directory("results/autodock_vina/receptors")
     log:
         "logs/prepare_receptors.log"
     shell:
@@ -405,7 +386,7 @@ rule run_docking:
         "results/autodock_vina/receptors",
         "results/autodock_vina/cellotetraose.pdbqt"
     output:
-        touch("data/raw/.docking_complete")
+        directory("results/autodock_vina/docking_results")
     log:
         "logs/run_docking.log"
     shell:
@@ -415,7 +396,7 @@ rule run_docking:
 
 rule parse_vina_results:
     input:
-        "data/raw/.docking_complete"
+        "results/autodock_vina/docking_results"
     output:
         "output_files/vina_summary.csv"
     log:
@@ -428,8 +409,7 @@ rule parse_vina_results:
 
 rule prepare_docked_fasta:
     input:
-        "output_files/vina_summary.csv",
-        "data/fasta_files/filtered_hmmsearch.faa"
+        "output_files/vina_summary.csv"
     output:
         "data/fasta_files/docked_hits.faa"
     log:
