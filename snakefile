@@ -24,7 +24,9 @@ VALID_FAMILIES = get_valid_families()
 rule all:
     input:
         "data/raw/.structures_prepared",
-        "output_files/opt_ph_prediction.csv"
+        "output_files/opt_ph_prediction.csv",
+        "output_files/ph_pi_summary.csv"
+
 
 rule download_cazy_data:
     input:
@@ -429,4 +431,18 @@ rule run_ephod:
     shell:
         """
         bash scripts/run_ephod.sh 2> {log}
+        """
+
+rule calculate_pi:
+    input:
+        "data/fasta_files/docked_hits.faa",
+        "output_files/top_hits.csv",
+        "output_files/opt_ph_prediction.csv"
+    output:
+        "output_files/ph_pi_summary.csv"
+    log:
+        "logs/calculate_pi.log"
+    shell:
+        """
+        python scripts/calculate_pi.py 2> {log}
         """
